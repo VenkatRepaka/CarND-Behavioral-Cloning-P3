@@ -6,6 +6,7 @@ import data_generation as datagen
 from sklearn import model_selection
 from keras.layers.convolutional import Conv2D
 from keras.layers.convolutional import MaxPooling2D
+import cv2
 
 
 def batch_generator(x, y, batch_size=64):
@@ -29,6 +30,13 @@ def batch_generator(x, y, batch_size=64):
                     aug_image = datagen.change_brightness(aug_image)
                     batch_X.append(aug_image)
                     batch_y.append(y[idx])
+
+                # b, g, r = cv2.split(x[idx])
+                # image = cv2.merge([r, g, b])
+                flipped_image = cv2.flip(x[idx], 1)
+                batch_X.append(flipped_image)
+                batch_y.append(-1*y[idx])
+
         yield(np.array(batch_X), np.array(batch_y))
 
 

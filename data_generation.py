@@ -58,19 +58,19 @@ def load_data_with_flip_numpy():
                 image = cv2.imread(image_data_file_path + line[k].strip())
                 b, g, r = cv2.split(image)
                 image = cv2.merge([r, g, b])
-
-                flipped_image = cv2.flip(image, 1, cv2.COLOR_BGR2RGB)
+                #
+                # flipped_image = cv2.flip(image, 1, cv2.COLOR_BGR2RGB)
                 if k == 0:
                     y.append(float(line[3]))
-                    y.append(-1 * float(line[3]))
+                    # y.append(-1 * float(line[3]))
                 elif k == 1:
                     y.append(float(line[3]) + left_steering_correction)
-                    y.append(-1 * (float(line[3]) + left_steering_correction))
+                    # y.append(-1 * (float(line[3]) + left_steering_correction))
                 else:
                     y.append(float(line[3]) + right_steering_correction)
-                    y.append(-1 * (float(line[3]) + right_steering_correction))
+                    # y.append(-1 * (float(line[3]) + right_steering_correction))
                 x.append(image)
-                x.append(flipped_image)
+                # x.append(flipped_image)
                 counter += 1
                 if counter % 10 == 0:
                     print('{:2d} images loaded'.format(counter))
