@@ -97,27 +97,37 @@ def generate_mirror_images():
     return flipped_images, flipped_steering
 
 
-def augment_data(ratio=50, plot_data=False, write_augmented_images=False):
+def augment_data(ratio=50, plot_data=False, write_aug_images=False, flip=False, shadow=False, crop=False):
+    augmented_data_images = []
+    augmented_steering = []
     print('Start data augmentation')
-    flipped_images, flipped_steering = generate_mirror_images()
-    print('Mirror image generation complete')
-    original_flipped_images = flipped_images + images
-    steering.extend(flipped_steering)
-    shadowed_images, shadowed_steering = add_shadow(original_flipped_images, ratio)
-    print('Shadowing images complete')
-    cropped_images = crop_images(shadowed_images)
-    print('Cropping images done')
-    print(cropped_images[0].shape)
-    if write_augmented_images:
-        write_augmented_images(cropped_images)
+    if flip:
+        flipped_images, flipped_steering = generate_mirror_images()
+        print('Mirror image generation complete')
+        augmented_data_images += flipped_images
+        augmented_steering += flipped_steering
+    # original_flipped_images = flipped_images + images
+    # steering.extend(flipped_steering)
+    if shadow:
+        shadowed_images, shadowed_steering = add_shadow(augmented_data_images, ratio)
+        augmented_data_images += shadowed_images
+        augmented_steering += shadowed_steering
+        print('Shadowing images complete')
+
+    if crop:
+        augmented_data_images = crop_images(augmented_data_images)
+        print('Cropping images done')
+        print(augmented_data_images[0].shape)
+    if write_aug_images:
+        write_aug_images(augmented_data_images)
     if plot_data:
-        if len(cropped_images) >= 6:
-            random_images_idx = np.random.choice(len(cropped_images), 12)
+        if len(augmented_data_images) >= 6:
+            random_images_idx = np.random.choice(len(augmented_data_images), 12)
             plot_images = []
             for idx in random_images_idx:
-                plot_images.append(cropped_images[idx])
+                plot_images.append(augmented_data_images[idx])
             display_sample_images(plot_images)
-    return cropped_images
+    return augmented_data_images
 
 
 def display_sample_images(images_to_plot):
@@ -140,9 +150,9 @@ def hist_with_steering_angles():
     return None
 
 
-def very_simple_model():
+def very_simple_model(input_shape):
     model = Sequential()
-    model.add(Flatten(input_shape=(50, 320, 3)))
+    model.add(Flatten(input_shape=input_shape))
     model.add(Dense(1))
     return model
 
@@ -161,11 +171,13 @@ def vgg16_model():
 
 initial_sample = load_data('./data/data/driving_log.csv', './data/data/')
 print('Data load successful')
-augmented_images = augment_data(100, plot_data=False)
+augmented_images = augment_data(100, plot_data=False, write_aug_images=False, flip=True, shadow=True, crop=False)
 # plt.imshow(cv2.cvtColor(cv2.imread('./data/data/IMG/center_2016_12_01_13_30_48_287.jpg'), cv2.COLOR_BGR2RGB))
 # plt.show()
 
-model = very_simple_model()
-model.compile(loss='mean_squared_error', optimizer=Adam(lr=0.001))
+model_input_shape = augmented_images[0].shape
+model = very_simple_model(model_input_shape)
+# model.compile(loss='mean_squared_error', optimizer=Adam(lr=0.001))
+model.compile(loss='mse', optimizer='adam')
 model.fit(np.array(augmented_images), np.array(steering), validation_split=0.2, shuffle=True)
 model.save('model.h5')
