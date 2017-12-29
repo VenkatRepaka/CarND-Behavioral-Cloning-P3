@@ -4,7 +4,7 @@ from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda, Dropout
 import data_generation as datagen
 from sklearn import model_selection
-from keras.layers.convolutional import Convolution2D
+from keras.layers.convolutional import Conv2D
 from keras.layers.convolutional import MaxPooling2D
 
 
@@ -77,12 +77,12 @@ def vgg16_model(model_input_shape):
         input_shape=model_input_shape
     ))
 
-    model.add(Convolution2D(24, 5, 5, border_mode='valid', activation='relu', subsample=(2, 2)))
-    model.add(Convolution2D(36, 5, 5, border_mode='valid', activation='relu', subsample=(2, 2)))
-    model.add(Convolution2D(48, 5, 5, border_mode='valid', activation='relu', subsample=(2, 2)))
+    model.add(Conv2D(24, filters=(5, 5), padding='valid', activation='relu', strides=(2, 2)))
+    model.add(Conv2D(36, filters=(5, 5), padding='valid', activation='relu', strides=(2, 2)))
+    model.add(Conv2D(48, filters=(5, 5), padding='valid', activation='relu', strides=(2, 2)))
     model.add(Dropout(.4))
-    model.add(Convolution2D(64, 3, 3, border_mode='valid', activation='relu', subsample=(1, 1)))
-    model.add(Convolution2D(64, 3, 3, border_mode='valid', activation='relu', subsample=(1, 1)))
+    model.add(Conv2D(64, filters=(5, 5), padding='valid', activation='relu', strides=(1, 1)))
+    model.add(Conv2D(64, filters=(5, 5), padding='valid', activation='relu', strides=(1, 1)))
     model.add(Dropout(.3))
     model.add(Flatten())
     model.add(Dense(1164, activation='relu'))
