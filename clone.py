@@ -1,9 +1,11 @@
 from matplotlib import pyplot as plt
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Flatten, Dense, Lambda
+from keras.layers import Flatten, Dense, Lambda, Dropout
 import data_generation as datagen
 from sklearn import model_selection
+from keras.layers.convolutional import Convolution2D
+from keras.layers.convolutional import MaxPooling2D
 
 
 def batch_generator(x, y, batch_size=64):
@@ -67,8 +69,30 @@ def nvidia_model():
     return None
 
 
-def vgg16_model():
-    return None
+def vgg16_model(model_input_shape):
+    model = Sequential()
+
+    model.add(Lambda(
+        lambda x: (x / 255.0) - 0.5,
+        input_shape=model_input_shape
+    ))
+
+    model.add(Convolution2D(24, 5, 5, border_mode='valid', activation='relu', subsample=(2, 2)))
+    model.add(Convolution2D(36, 5, 5, border_mode='valid', activation='relu', subsample=(2, 2)))
+    model.add(Convolution2D(48, 5, 5, border_mode='valid', activation='relu', subsample=(2, 2)))
+    model.add(Dropout(.4))
+    model.add(Convolution2D(64, 3, 3, border_mode='valid', activation='relu', subsample=(1, 1)))
+    model.add(Convolution2D(64, 3, 3, border_mode='valid', activation='relu', subsample=(1, 1)))
+    model.add(Dropout(.3))
+    model.add(Flatten())
+    model.add(Dense(1164, activation='relu'))
+    model.add(Dropout(.2))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(1, activation='tanh'))
+
+    return model
 
 
 batch_size = 128
@@ -85,7 +109,8 @@ training_generator = batch_generator(X_train, y_train, batch_size=batch_size)
 validation_generator = batch_generator(X_valid, y_valid, batch_size=batch_size)
 
 model_input_shape = X_train[0].shape
-model = very_simple_model(model_input_shape)
+# model = very_simple_model(model_input_shape)
+model = vgg16_model(model_input_shape)
 # model.compile(loss='mean_squared_error', optimizer=Adam(lr=0.001))
 model.compile(loss='mse', optimizer='adam')
 # model.fit(np.array(augmented_images), np.array(steering), validation_split=0.2, shuffle=True, batch_size=128)
