@@ -96,7 +96,8 @@ def vgg16_model(model_input_shape):
 
 
 batch_size = 128
-X, y = datagen.load_data_with_flip()
+X, y = datagen.load_data_with_flip_numpy()
+# display_sample_images(X[0:6])
 print('Data load successful')
 
 X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.2)

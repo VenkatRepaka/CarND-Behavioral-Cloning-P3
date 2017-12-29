@@ -44,6 +44,39 @@ def load_data_with_flip():
     return x, y
 
 
+def load_data_with_flip_numpy():
+    # x = np.empty(array_shape, np.float32)
+    # y = np.empty([0], np.float32)
+    x = []
+    y = []
+    with open(file_path) as csv_file:
+        lines = csv.reader(csv_file, delimiter=',')
+        next(lines)
+        counter = 0
+        for line in lines:
+            for k in range(3):
+                image = cv2.imread(image_data_file_path + line[k].strip())
+                b, g, r = cv2.split(image)
+                image = cv2.merge([r, g, b])
+
+                flipped_image = cv2.flip(image, 1, cv2.COLOR_BGR2RGB)
+                if k == 0:
+                    y.append(float(line[3]))
+                    y.append(-1 * float(line[3]))
+                elif k == 1:
+                    y.append(float(line[3]) + left_steering_correction)
+                    y.append(-1 * (float(line[3]) + left_steering_correction))
+                else:
+                    y.append(float(line[3]) + right_steering_correction)
+                    y.append(-1 * (float(line[3]) + right_steering_correction))
+                x.append(image)
+                x.append(flipped_image)
+                counter += 1
+                if counter % 10 == 0:
+                    print('{:2d} images loaded'.format(counter))
+    return np.array(x), np.array(y)
+
+
 def add_random_shadow(image):
     alpha = np.random.uniform(0.2, 0.6)
     h, w, d = image.shape
