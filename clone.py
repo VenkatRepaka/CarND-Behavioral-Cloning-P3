@@ -13,6 +13,7 @@ def batch_generator(x, y, batch_size=64):
     while True:
         batch_X = []
         batch_y = []
+        print('Started generating batch')
         for batch in range(0, len(x), batch_size):
             start = batch
             end = batch + batch_size - 1
@@ -36,7 +37,8 @@ def batch_generator(x, y, batch_size=64):
                 flipped_image = cv2.flip(x[idx], 1)
                 batch_X.append(flipped_image)
                 batch_y.append(-1*y[idx])
-
+                if idx % 10 == 0:
+                    print("{:2d} images generated in batch".format(idx))
         yield(np.array(batch_X), np.array(batch_y))
 
 
@@ -85,12 +87,12 @@ def vgg16_model(model_input_shape):
         input_shape=model_input_shape
     ))
 
-    model.add(Conv2D(24, filters=(5, 5), padding='valid', activation='relu', strides=(2, 2)))
-    model.add(Conv2D(36, filters=(5, 5), padding='valid', activation='relu', strides=(2, 2)))
-    model.add(Conv2D(48, filters=(5, 5), padding='valid', activation='relu', strides=(2, 2)))
+    model.add(Conv2D(24, (5, 5), padding='valid', activation='relu'))
+    model.add(Conv2D(36, (5, 5), padding='valid', activation='relu'))
+    model.add(Conv2D(48, (5, 5), padding='valid', activation='relu'))
     model.add(Dropout(.4))
-    model.add(Conv2D(64, filters=(5, 5), padding='valid', activation='relu', strides=(1, 1)))
-    model.add(Conv2D(64, filters=(5, 5), padding='valid', activation='relu', strides=(1, 1)))
+    model.add(Conv2D(64, (5, 5), padding='valid', activation='relu'))
+    model.add(Conv2D(64, (5, 5), padding='valid', activation='relu'))
     model.add(Dropout(.3))
     model.add(Flatten())
     model.add(Dense(1164, activation='relu'))
@@ -111,9 +113,10 @@ print('Data load successful')
 X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.2)
 print('Train and test split successful')
 
-steps_per_epoch = int(len(X_train)/batch_size)
+# steps_per_epoch = int(len(X_train)/batch_size)
+steps_per_epoch = 1
 # validation_steps = int(len(X_valid)/batch_size)
-validation_steps = 50
+validation_steps = 1
 training_generator = batch_generator(X_train, y_train, batch_size=batch_size)
 validation_generator = batch_generator(X_valid, y_valid, batch_size=batch_size)
 

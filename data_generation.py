@@ -4,7 +4,7 @@ import numpy as np
 import random
 from matplotlib import pyplot as plt
 
-file_path = './data/data/driving_log_dummy_64.csv'
+file_path = './data/data/driving_log_dummy_16.csv'
 image_data_file_path = './data/data/'
 image_shape = (320, 160, 3)
 array_shape = [0, 160, 320, 3]
@@ -101,9 +101,9 @@ def change_brightness(image):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)  # convert it to hsv
 
     h, s, v = cv2.split(hsv)
-    v *= np.random.uniform()
-    v[v > 255] = 255
-    # v = np.array(v, np.uint8)
+    z = v*np.random.uniform()
+    z[z > 255] = 255
+    v = np.array(z, np.uint8)
     final_hsv = cv2.merge((h, s, v))
 
     img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
