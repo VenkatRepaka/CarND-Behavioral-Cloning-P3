@@ -1,153 +1,32 @@
-import csv
-from matplotlib import pyplot as plt
 import numpy as np
-import cv2
-import random
 from keras.models import Sequential
-from keras.layers import Flatten, Dense
+from keras.layers import Flatten, Dense, Lambda, Dropout, Conv2D, MaxPooling2D, Convolution2D
 from keras.optimizers import Adam
 
-images = []
-steering = []
-
-left_steering_correction = 0.25
-right_steering_correction = -0.25
-# model_image_input_shape = (128, 128)
-model_image_input_shape = (320, 160)
+import data_generation as dg
+from sklearn import model_selection
+import pandas as pd
+from sklearn.utils import shuffle
 
 
-def write_augmented_images(images_to_write):
-    cntr = 0
-    for im in images_to_write:
-        cv2.imwrite('./write_data/' + str(cntr) + '.jpeg', im)
-        cntr += 1
-
-
-def load_data(file_path, images_data_path):
-    with open(file_path) as csvfile:
-        lines = csv.reader(csvfile, delimiter=',')
-        next(lines)
-        # counter = 0
-        for line in lines:
-            # counter += 1
-            # if counter > 3:
-            #     continue
-            for k in range(3):
-                image = cv2.cvtColor(cv2.imread(images_data_path + line[k].strip()), cv2.COLOR_BGR2RGB)
-                image = cv2.resize(image, dsize=model_image_input_shape)
-                images.append(image)
-                if k == 0:
-                    steering.append(float(line[3]))
-                elif k == 1:
-                    steering.append(float(line[3]) + left_steering_correction)
-                else:
-                    steering.append(float(line[3]) + right_steering_correction)
-        total_samples = len(images)
-        # index_values = np.arange(0, total_samples)
-        # return total_samples, index_values
-        return total_samples
-
-
-def image_indices_to_augment(no_of_images, ratio=50):
-    no_to_augment = int(no_of_images * ratio / 100)
-    sampling_indices = np.arange(0, no_of_images)
-    augment_image_indices = np.random.choice(sampling_indices, no_to_augment, replace=False)
-    return augment_image_indices
-    # return sampling_indices
-
-
-def add_shadow(images_to_shadow, ratio=50):
-    alpha = 0.3
-    augmented_images = []
-    steering_augment = []
-    augment_image_indices = image_indices_to_augment(len(images_to_shadow), ratio)
-    for idx in augment_image_indices:
-        aug_image = images_to_shadow[idx].copy()
-        steering_augment.append(steering[idx])
-
-        h, w, d = aug_image.shape
-        zero_or_one = np.random.randint(0, 2)
-        if zero_or_one == 0:
-            points = np.array([[0, 0], [w - random.randint(0, w), 0], [w - random.randint(0, w), h], [0, h]], np.int32)
-        else:
-            points = np.array([[w - random.randint(0, w), 0], [w, 0], [w, h], [w - random.randint(0, w), h]], np.int32)
-
-        overlay = aug_image.copy()
-        output = aug_image.copy()
-
-        # overlay=cv2.rectangle(image, (25, 25), (w-10, h-10), (0,0,0), -1)
-        # overlay = cv2.fillConvexPoly(aug_image, points, (0, 0, 0))
-        cv2.fillPoly(overlay, [points], (0, 0, 0))
-        cv2.addWeighted(overlay, alpha, output, 1.0 - alpha, 0, aug_image)
-        augmented_images.append(aug_image)
-        # cv2.imshow('overlayed', aug_image)
-        # cv2.waitKey(0)
-        # cv2.destroyWindow("overlayed")
-    return augmented_images, steering_augment
-
-
-def crop_images(images_to_crop):
-    cropped_images = [img[70:120, 0:320] for img in images_to_crop]
-    return cropped_images
-
-
-def generate_mirror_images():
-    flipped_images = [cv2.flip(image, 1) for image in images]
-    flipped_steering = [steering_angle*-1 for steering_angle in steering]
-    return flipped_images, flipped_steering
-
-
-def augment_data(ratio=50, plot_data=False, write_aug_images=False, flip=False, shadow=False, crop=False):
-    augmented_data_images = []
-    augmented_steering = []
-    print('Start data augmentation')
-    if flip:
-        flipped_images, flipped_steering = generate_mirror_images()
-        print('Mirror image generation complete')
-        augmented_data_images += flipped_images
-        augmented_steering += flipped_steering
-    # original_flipped_images = flipped_images + images
-    # steering.extend(flipped_steering)
-    if shadow:
-        shadowed_images, shadowed_steering = add_shadow(augmented_data_images, ratio)
-        augmented_data_images += shadowed_images
-        augmented_steering += shadowed_steering
-        print('Shadowing images complete')
-
-    if crop:
-        augmented_data_images = crop_images(augmented_data_images)
-        print('Cropping images done')
-        print(augmented_data_images[0].shape)
-    if write_aug_images:
-        write_aug_images(augmented_data_images)
-    if plot_data:
-        if len(augmented_data_images) >= 6:
-            random_images_idx = np.random.choice(len(augmented_data_images), 12)
-            plot_images = []
-            for idx in random_images_idx:
-                plot_images.append(augmented_data_images[idx])
-            display_sample_images(plot_images)
-    return augmented_data_images
-
-
-def display_sample_images(images_to_plot):
-    cols = 3
-    rows = int(len(images_to_plot)/cols) + len(images_to_plot) % cols
-    fig, img_holders = plt.subplots(rows, cols)
-    for x in range(len(img_holders)):
-        for y in range(len(img_holders[x])):
-            if x * cols + y < len(images_to_plot):
-                img_holders[x][y].imshow(images_to_plot[x*cols+y])
-                # img_holders[x][y].imshow(images_to_plot[x*cols+y], cmap='gray')
-                img_holders[x][y].set_axis_off()
-            else:
-                img_holders[x][y].axis('off')
-    plt.show()
-    return None
-
-
-def hist_with_steering_angles():
-    return None
+def load_data(image_data_path):
+    data = pd.read_csv(image_data_path)
+    x_data = np.array([])
+    y_data = np.array([])
+    x_data = np.append(x_data, data['center'])
+    steering_center = data['steering']
+    x_data = np.append(x_data, data['left'])
+    steering_left = data['steering'] + left_steering_correction
+    x_data = np.append(x_data, data['right'])
+    steering_right = data['steering'] + right_steering_correction
+    y_data = np.append(y_data, steering_center)
+    y_data = np.append(y_data, steering_left)
+    y_data = np.append(y_data, steering_right)
+    x_data, y_data = shuffle(x_data, y_data)
+    x_train_data, x_valid_data, y_train_data, y_valid_data = model_selection.train_test_split(np.array(x_data),
+                                                                                              np.array(y_data),
+                                                                                              test_size=0.2)
+    return x_train_data, x_valid_data, y_train_data, y_valid_data
 
 
 def very_simple_model(input_shape):
@@ -157,27 +36,61 @@ def very_simple_model(input_shape):
     return model
 
 
-def simple_model():
-    return None
+def nvidia_model(model_input_shape):
+    model = Sequential()
+    model.add(Lambda(
+        lambda x: (x / 255.0) - 0.5,
+        input_shape=model_input_shape
+    ))
+    # Color space conversion layer
+    model.add(Convolution2D(3, 1, 1, border_mode='same', name='color_conv'))
+    model.add(Convolution2D(24, 5, 5, border_mode='valid', activation='relu', subsample=(2, 2)))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(1, 1)))
+    model.add(Convolution2D(36, 5, 5, border_mode='valid', activation='relu', subsample=(2, 2)))
+    model.add(Convolution2D(48, 5, 5, border_mode='valid', activation='relu', subsample=(2, 2)))
+    model.add(Convolution2D(64, 3, 3, border_mode='valid', activation='relu', subsample=(1, 1)))
+    model.add(Convolution2D(64, 3, 3, border_mode='valid', activation='relu', subsample=(1, 1)))
+    model.add(Flatten())
+
+    model.add(Dense(1164, activation='relu'))
+    model.add(Dropout(keep_prob))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(1))
+    return model
 
 
-def nvidia_model():
-    return None
-
-
-def vgg16_model():
-    return None
-
-
-initial_sample = load_data('./data/data/driving_log.csv', './data/data/')
-print('Data load successful')
-augmented_images = augment_data(100, plot_data=False, write_aug_images=False, flip=True, shadow=True, crop=False)
-# plt.imshow(cv2.cvtColor(cv2.imread('./data/data/IMG/center_2016_12_01_13_30_48_287.jpg'), cv2.COLOR_BGR2RGB))
-# plt.show()
-
-model_input_shape = augmented_images[0].shape
-model = very_simple_model(model_input_shape)
-# model.compile(loss='mean_squared_error', optimizer=Adam(lr=0.001))
-model.compile(loss='mse', optimizer='adam')
-model.fit(np.array(augmented_images), np.array(steering), validation_split=0.2, shuffle=True)
-model.save('model.h5')
+left_steering_correction = 0.25
+right_steering_correction = -0.25
+data_dir = "./data/"
+keep_prob = 0.5
+learning_rate = 0.0001
+batch_size = 128
+num_train_images = 19200
+num_val_images = 4820
+# num_train_images = 100
+# num_val_images = 50
+x_train, x_valid, y_train, y_valid = load_data(data_dir+'driving_log.csv')
+# steps_per_epoch = 1
+# validation_steps = 1
+train_data_generator = dg.train_data_generator(data_dir, x_train, y_train, batch_size)
+valid_data_generator = dg.train_data_generator(data_dir, x_valid, y_valid, batch_size, augment=False)
+# x_train_batch, x_train_batch = dg.train_data_generator(data_dir, x_train, y_train, batch_size=128)
+# x_valid_batch, x_valid_batch = dg.train_data_generator(data_dir, x_valid, y_valid, batch_size=128, augment=False)
+exec_model = nvidia_model((64, 64, 3))
+exec_model.summary()
+exec_model.compile(optimizer=Adam(learning_rate), loss="mse")
+# exec_model.fit_generator(train_data_generator,
+#                          steps_per_epoch=steps_per_epoch,
+#                          validation_data=valid_data_generator,
+#                          validation_steps=validation_steps,
+#                          epochs=1,
+#                          verbose=1)
+exec_model.fit_generator(train_data_generator,
+                         samples_per_epoch=num_train_images,
+                         nb_epoch=30,
+                         validation_data=valid_data_generator,
+                         nb_val_samples=num_val_images,
+                         verbose=1)
+exec_model.save('model.h5')
