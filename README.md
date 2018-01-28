@@ -104,7 +104,7 @@ image = image[int(rows * top_percent):int(rows - rows * bottom_percent), :]
 ```
 
 - Random Shear - I have seen many blogs from medium using random shear.
-![One reference](https://towardsdatascience.com/teaching-cars-to-drive-using-deep-learning-steering-angle-prediction-5773154608f2)
+[One reference](https://towardsdatascience.com/teaching-cars-to-drive-using-deep-learning-steering-angle-prediction-5773154608f2)
 ```
 rows, cols, ch = image.shape
 dx = np.random.randint(-shear_range, shear_range + 1)
