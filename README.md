@@ -142,10 +142,12 @@ if shear == 1:
 ```
 
 Below are few sample images applying the above pipeline
+![fig1](https://github.com/VenkatRepaka/CarND-Behavioral-Cloning-P3/blob/master/readme_data/figure_1.png)
+![fig2](https://github.com/VenkatRepaka/CarND-Behavioral-Cloning-P3/blob/master/readme_data/figure_2.png)
 
 ### Model Architecture
 Most of the students and the blogs on medium have preferred NVIDIA model. So I chose it here.
-I have used almost same as mentioned in the ![paper](https://arxiv.org/abs/1604.07316)
+I have used almost same as mentioned in the [paper](https://arxiv.org/abs/1604.07316)
 ```
 model = Sequential()
 model.add(Lambda(
@@ -241,7 +243,7 @@ end = 0
         yield (np.array(to_process_images), np.array(to_process_steering))
 ```
 
-Link to the ![video](https://github.com/VenkatRepaka/CarND-Behavioral-Cloning-P3/blob/master/run.mp4)
+Link to the [video](https://github.com/VenkatRepaka/CarND-Behavioral-Cloning-P3/blob/master/run.mp4)
 
 ### Future Work
 The model I have employed could only work on simple track
