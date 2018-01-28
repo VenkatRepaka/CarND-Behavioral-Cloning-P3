@@ -42,13 +42,13 @@ def nvidia_model(model_input_shape):
         lambda x: (x / 255.0) - 0.5,
         input_shape=model_input_shape
     ))
-    model.add(Conv2D(3, (1, 1), border_mode='same', name='color_conv'))
-    model.add(Conv2D(24, (5, 5), strides=(2, 2), border_mode='valid', activation='relu'))
+    model.add(Conv2D(3, (1, 1), padding='same', name='color_conv'))
+    model.add(Conv2D(24, (5, 5), strides=(2, 2), padding='valid', activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(1, 1)))
-    model.add(Conv2D(36, (5, 5), strides=(2, 2), border_mode='valid', activation='relu'))
-    model.add(Conv2D(48, (5, 5), strides=(2, 2), border_mode='valid', activation='relu'))
-    model.add(Conv2D(64, (3, 3), strides=(1, 1), border_mode='valid', activation='relu'))
-    model.add(Conv2D(64, (3, 3), strides=(1, 1), border_mode='valid', activation='relu'))
+    model.add(Conv2D(36, (5, 5), strides=(2, 2), padding='valid', activation='relu'))
+    model.add(Conv2D(48, (5, 5), strides=(2, 2), padding='valid', activation='relu'))
+    model.add(Conv2D(64, (3, 3), strides=(1, 1), padding='valid', activation='relu'))
+    model.add(Conv2D(64, (3, 3), strides=(1, 1), padding='valid', activation='relu'))
     model.add(Flatten())
 
     model.add(Dense(1164, activation='relu'))
