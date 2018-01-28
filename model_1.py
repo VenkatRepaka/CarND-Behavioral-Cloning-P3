@@ -42,6 +42,7 @@ def nvidia_model(model_input_shape):
         lambda x: (x / 255.0) - 0.5,
         input_shape=model_input_shape
     ))
+    # Color space conversion layer
     model.add(Conv2D(3, (1, 1), padding='same', name='color_conv'))
     model.add(Conv2D(24, (5, 5), strides=(2, 2), padding='valid', activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(1, 1)))
@@ -73,13 +74,13 @@ train_data_generator = dg.train_data_generator(data_dir, x_train, y_train, batch
 valid_data_generator = dg.train_data_generator(data_dir, x_valid, y_valid, batch_size, augment=False)
 # x_train_batch, x_train_batch = dg.train_data_generator(data_dir, x_train, y_train, batch_size=128)
 # x_valid_batch, x_valid_batch = dg.train_data_generator(data_dir, x_valid, y_valid, batch_size=128, augment=False)
-model = nvidia_model((64, 64, 3))
-model.summary()
-model.compile(optimizer=Adam(learning_rate), loss="mse")
-model.fit_generator(train_data_generator,
-                    steps_per_epoch = steps_per_epoch,
-                    validation_data=valid_data_generator,
-                    validation_steps=validation_steps,
-                    epochs=10,
-                    verbose=1)
-model.save('model.h5')
+exec_model = nvidia_model((64, 64, 3))
+exec_model.summary()
+exec_model.compile(optimizer=Adam(learning_rate), loss="mse")
+exec_model.fit_generator(train_data_generator,
+                         steps_per_epoch = steps_per_epoch,
+                         validation_data=valid_data_generator,
+                         validation_steps=validation_steps,
+                         epochs=10,
+                         verbose=1)
+exec_model.save('model.h5')
