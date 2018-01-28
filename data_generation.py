@@ -305,9 +305,9 @@ def show_images(image, images):
 
 def train_data_generator(image_dir, x_data, y_data, batch_size=64, augment=True):
     end = 0
-    to_process_images = []
-    to_process_steering = []
     while True:
+        to_process_images = []
+        to_process_steering = []
         start = end
         end = start+batch_size
         to_process_x = x_data[start:end]
